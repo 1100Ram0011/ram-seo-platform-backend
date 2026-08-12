@@ -71,7 +71,7 @@ export const googleLogin = (req: Request, res: Response) => {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `http://localhost:5000/api/analytics/auth/google/callback`
+      `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/analytics/auth/google/callback`
     );
 
     const url = oauth2Client.generateAuthUrl({
@@ -101,7 +101,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `http://localhost:5000/api/analytics/auth/google/callback`
+      `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/analytics/auth/google/callback`
     );
 
     const { tokens } = await oauth2Client.getToken(code as string);
