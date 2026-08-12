@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const analytics_controller_1 = require("../controllers/analytics.controller");
+const router = (0, express_1.Router)();
+router.get('/auth/google', analytics_controller_1.googleLogin);
+router.get('/auth/google/callback', analytics_controller_1.googleCallback);
+router.post('/properties', analytics_controller_1.getGa4Properties);
+router.post('/report', analytics_controller_1.getGa4Overview);
+exports.default = router;
