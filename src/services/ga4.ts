@@ -215,11 +215,17 @@ export function formatAnalytics(data: any) {
   const rtByPage: any = {};
   const rtByCountry: any = {};
   const rtByDevice: any = {};
+  const rtFeed: any[] = [];
   rtRows.forEach((row: any) => {
     const screen = row.dimensionValues?.[0]?.value || "Unknown";
     const country = row.dimensionValues?.[1]?.value || "Unknown";
+    const city = row.dimensionValues?.[2]?.value || "Unknown";
     const device = row.dimensionValues?.[3]?.value || "Unknown";
     const users = Number(row.metricValues?.[0]?.value || 0);
+
+    if (users > 0) {
+      rtFeed.push({ page: screen, country, city, device, users });
+    }
 
     rtByPage[screen] = (rtByPage[screen] || 0) + users;
     if (country !== "(not set)") rtByCountry[country] = (rtByCountry[country] || 0) + users;
@@ -266,6 +272,7 @@ export function formatAnalytics(data: any) {
     engagedUsers: engagedSessions,
     realtimeUsers,
     realtimeDetail: {
+      feed: rtFeed,
       byPage: sortDesc(rtByPage),
       byCountry: sortDesc(rtByCountry),
       byDevice: sortDesc(rtByDevice),
