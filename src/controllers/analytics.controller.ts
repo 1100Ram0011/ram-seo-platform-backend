@@ -38,7 +38,7 @@ export const getGa4Overview = async (req: Request, res: Response) => {
   try {
     // In this simplified architecture, the frontend sends the refreshToken and propertyId 
     // since we are bypassing Prisma for the MVP.
-    const { refreshToken, propertyId, range } = req.body;
+    const { refreshToken, propertyId, range, startDate, endDate } = req.body;
 
     if (!refreshToken) {
       return res.status(400).json({ error: 'Google Analytics not connected. Missing refresh token.' });
@@ -56,7 +56,7 @@ export const getGa4Overview = async (req: Request, res: Response) => {
 
     const selectedRange = (range as string) || "weekly";
 
-    const rawData = await getAnalyticsData(propertyId, tempClient, selectedRange);
+    const rawData = await getAnalyticsData(propertyId, tempClient, selectedRange, startDate as string, endDate as string);
     const formattedData = formatAnalytics(rawData);
 
     res.json(formattedData);

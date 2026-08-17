@@ -57,7 +57,7 @@ const getGa4Overview = async (req, res) => {
 exports.getGa4Overview = getGa4Overview;
 const googleLogin = (req, res) => {
     try {
-        const oauth2Client = new googleapis_1.google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, `http://localhost:5000/api/analytics/auth/google/callback`);
+        const oauth2Client = new googleapis_1.google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/analytics/auth/google/callback`);
         const url = oauth2Client.generateAuthUrl({
             access_type: "offline",
             prompt: "consent",
@@ -81,7 +81,7 @@ const googleCallback = async (req, res) => {
         if (!code) {
             return res.status(400).send("Invalid request");
         }
-        const oauth2Client = new googleapis_1.google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, `http://localhost:5000/api/analytics/auth/google/callback`);
+        const oauth2Client = new googleapis_1.google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/analytics/auth/google/callback`);
         const { tokens } = await oauth2Client.getToken(code);
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         if (tokens.refresh_token) {
