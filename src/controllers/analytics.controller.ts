@@ -36,8 +36,6 @@ export const getGa4Properties = async (req: Request, res: Response) => {
 
 export const getGa4Overview = async (req: Request, res: Response) => {
   try {
-    // In this simplified architecture, the frontend sends the refreshToken and propertyId 
-    // since we are bypassing Prisma for the MVP.
     const { refreshToken, propertyId, range, startDate, endDate } = req.body;
 
     if (!refreshToken) {
@@ -48,6 +46,18 @@ export const getGa4Overview = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'No GA4 Property ID provided.' });
     }
 
+    // Normalize any date value to YYYY-MM-DD string (GA4 requirement)
+    const toYMD = (d: any): string | null => {
+      if (!d) return null;
+      if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // already correct
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return null;
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, '0');
+      const day = String(dt.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
     const tempClient = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET
@@ -55,8 +65,10 @@ export const getGa4Overview = async (req: Request, res: Response) => {
     tempClient.setCredentials({ refresh_token: refreshToken });
 
     const selectedRange = (range as string) || "weekly";
+    const cleanStart = toYMD(startDate);
+    const cleanEnd   = toYMD(endDate);
 
-    const rawData = await getAnalyticsData(propertyId, tempClient, selectedRange, startDate as string, endDate as string);
+    const rawData = await getAnalyticsData(propertyId, tempClient, selectedRange, cleanStart, cleanEnd);
     const formattedData = formatAnalytics(rawData);
 
     res.json(formattedData);

@@ -34,6 +34,8 @@ export const getAnalyticsData = async (
     newReturning,
     browsers,
     operatingSystems,
+    exitPagesRaw,
+    landingPagesRaw,
   ] = await Promise.all([
     // Core metrics
     analyticsData.properties.runReport({
@@ -146,6 +148,28 @@ export const getAnalyticsData = async (
         orderBys: [{ metric: { metricName: "totalUsers" }, desc: true }],
       },
     }),
+    // Exit Pages
+    analyticsData.properties.runReport({
+      property: propertyName,
+      requestBody: {
+        dateRanges: [dateRange],
+        dimensions: [{ name: "pagePath" }],
+        metrics: [{ name: "screenPageViews" }, { name: "exitRate" }],
+        limit: "30",
+        orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+      },
+    }),
+    // Landing Pages
+    analyticsData.properties.runReport({
+      property: propertyName,
+      requestBody: {
+        dateRanges: [dateRange],
+        dimensions: [{ name: "landingPage" }],
+        metrics: [{ name: "sessions" }, { name: "bounceRate" }],
+        limit: "30",
+        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      },
+    }),
   ]);
 
   return {
@@ -159,6 +183,8 @@ export const getAnalyticsData = async (
     newReturning: newReturning.data,
     browsers: browsers.data,
     operatingSystems: operatingSystems.data,
+    exitPagesRaw: exitPagesRaw.data,
+    landingPagesRaw: landingPagesRaw.data,
   };
 };
 
@@ -263,6 +289,18 @@ export function formatAnalytics(data: any) {
     if (k !== "(not set)") operatingSystems[k] = Number(row.metricValues?.[0]?.value || 0);
   });
 
+  const exitPages = (data?.exitPagesRaw?.rows || []).map((row: any) => ({
+    page: row.dimensionValues?.[0]?.value || "/",
+    views: Number(row.metricValues?.[0]?.value || 0),
+    exitRate: parseFloat(row.metricValues?.[1]?.value || 0) * 100,
+  }));
+
+  const landingPages = (data?.landingPagesRaw?.rows || []).map((row: any) => ({
+    page: row.dimensionValues?.[0]?.value || "/",
+    sessions: Number(row.metricValues?.[0]?.value || 0),
+    bounceRate: parseFloat(row.metricValues?.[1]?.value || 0) * 100,
+  }));
+
   return {
     users: canonicalTotal,
     sessions,
@@ -281,6 +319,8 @@ export function formatAnalytics(data: any) {
     devices,
     trafficSources,
     topPages,
+    exitPages,
+    landingPages,
     trend,
     newReturning,
     browsers,
