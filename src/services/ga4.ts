@@ -59,14 +59,14 @@ export const getAnalyticsData = async (
         metrics: [{ name: "totalUsers" }],
       },
     }),
-    // Countries
+    // Countries, Regions, Cities
     analyticsData.properties.runReport({
       property: propertyName,
       requestBody: {
         dateRanges: [dateRange],
-        dimensions: [{ name: "country" }],
+        dimensions: [{ name: "country" }, { name: "region" }, { name: "city" }],
         metrics: [{ name: "totalUsers" }],
-        limit: "50",
+        limit: "250",
         orderBys: [{ metric: { metricName: "totalUsers" }, desc: true }],
       },
     }),
@@ -193,9 +193,33 @@ export function formatAnalytics(data: any) {
   });
 
   const countries: any = {};
+  const cities: any = {};
+  const regions: any = {};
+  const geoTree: any = {};
+
   (data?.countries?.rows || []).forEach((row: any) => {
-    const k = row.dimensionValues?.[0]?.value || "Unknown";
-    if (k !== "(not set)") countries[k] = Number(row.metricValues?.[0]?.value || 0);
+    const country = row.dimensionValues?.[0]?.value || "Unknown";
+    const region = row.dimensionValues?.[1]?.value || "Unknown";
+    const city = row.dimensionValues?.[2]?.value || "Unknown";
+    const users = Number(row.metricValues?.[0]?.value || 0);
+
+    if (country !== "(not set)") {
+      countries[country] = (countries[country] || 0) + users;
+      
+      if (!geoTree[country]) geoTree[country] = { users: 0, regions: {} };
+      geoTree[country].users += users;
+
+      if (region !== "(not set)") {
+        regions[region] = (regions[region] || 0) + users;
+        if (!geoTree[country].regions[region]) geoTree[country].regions[region] = { users: 0, cities: {} };
+        geoTree[country].regions[region].users += users;
+
+        if (city !== "(not set)") {
+          cities[city] = (cities[city] || 0) + users;
+          geoTree[country].regions[region].cities[city] = (geoTree[country].regions[region].cities[city] || 0) + users;
+        }
+      }
+    }
   });
 
   const trafficSources: any = {};
@@ -278,6 +302,9 @@ export function formatAnalytics(data: any) {
       byDevice: sortDesc(rtByDevice),
     },
     countries,
+    cities,
+    regions,
+    geoTree,
     devices,
     trafficSources,
     topPages,
